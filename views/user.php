@@ -56,7 +56,7 @@
                     <div class="container-fluid m-0">
                         <form class="needs-validation" novalidate id="formUsuarios">
                             <div class="form-row">
-                                <input type="hidden" id="txtid">
+                                <input type="hidden" id="txtId">
                                 <div class="col-md-3 mb-3">
                                     <label for="txtIdUsuario">#</label>
                                     <input type="number" class="form-control" id="txtIdUsuario" placeholder="#" required>

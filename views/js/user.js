@@ -1,14 +1,16 @@
 let usuarios = null;
+const modalUsuarios = new bootstrap.Modal(document.getElementById('exampleModal'))
 document.addEventListener('DOMContentLoaded', () => {
+    //console.error(modalUsuarios)
     listarUsuarios().then(() => {
         generarTabla()
     })
     validarFormularios();
 
     document.getElementById('btnAgregarUsuario').addEventListener('click', () => {
-        document.getElementById('formUsuarios').reset();
+        document.getElementById('formUsuarios').reset()
         document.getElementById('tituloModalUsuarios').innerHTML = 'Agregar Usuario'
-        document.getElementById('txtIdUsuario').innerHTML = '' 
+        document.getElementById('txtIdUsuario').innerHTML = ''
         document.getElementById('formUsuarios').classList.remove = 'was-validated'
     })
 })
@@ -45,6 +47,7 @@ const listarUsuarios = async () => {
 
 const recolectarDatosGUIUsuario = () => {
     return {
+        id: document.getElementById('txtId').value,
         idUsuario: document.getElementById('txtIdUsuario').value,
         nombreUsuario: document.getElementById('txtNombreUsuario').value,
         correoUsuario: document.getElementById('txtEmailUsuario').value,
@@ -67,19 +70,32 @@ const accionesUsuario = async (accion, datos) => {
             })
             let res = resultado.data
             if (res[0] == 'success') {
-                swal("Excelente !", res[1], "success");
-                document.getElementById('formUsuarios').reset();
-                $('#modal').modal('hide') 
-            }else if(res[0] == 'warning'){
+                swal({
+                    title: 'Excelente !',
+                    text: res[1],
+                    icon: 'success',
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            $('#exampleModal').modal('hide')
+                            document.getElementById('formUsuarios').reset();
+                            listarUsuarios().then(() => { generarTabla() })
+                        } else {
+                            swal("OK");
+                        }
+                    });
+            } else if (res[0] == 'warning') {
                 console.warn([res[1]])
-            }else if(res[0] == 'error'){
+            } else if (res[0] == 'error') {
                 swal({
                     title: ':( !',
                     text: `${res[1]}`,
                     icon: 'error',
                     button: 'Ok',
                 });
-            }else{
+            } else {
                 console.log('respuesta no definida ' + res)
             }
         } catch {
@@ -87,15 +103,103 @@ const accionesUsuario = async (accion, datos) => {
         }
     } else if (accion == 'eliminar') {
         try {
-
+            let res = await axios('../controllers/userController.php', {
+                method: 'POST',
+                data: {
+                    tipoPeticion: 'eliminarUsuario',
+                    idUsuario: datos
+                }
+            })
+            let respuesta = res.data
+            if (respuesta[0] == 'success') {
+                swal({
+                    title: 'Excelente !',
+                    text: `${respuesta[1]}`,
+                    icon: 'Success',
+                    button: 'Ok',
+                });
+                listarUsuarios().then(() => { generarTabla() })
+            } else if (respuesta[0] == 'error') {
+                swal({
+                    title: ':( !',
+                    text: `${respuesta[1]}`,
+                    icon: 'error',
+                    button: 'Ok',
+                });
+            } else if (respuesta[0] == 'warning') {
+                console.warn(respuesta[1])
+            } else {
+                console.warn('respuesta no definida ' + respuesta)
+            }
         } catch {
-
+            console.error(error)
         }
     } else if (accion == 'editar') {
         try {
+            let res = await axios('../controllers/userController.php', {
+                method: 'POST',
+                data: {
+                    tipoPeticion: 'editarUsuario',
+                    id: datos.id,
+                    idUsuario: datos.idUsuario,
+                    nombreUsuario: datos.nombreUsuario,
+                    correoUsuario: datos.correoUsuario,
+                    statusUsuario: datos.EstatusUsuario
+                }
+            })
 
+            let respuesta = res.data
+            if (respuesta[0] == 'success') {
+                swal({
+                    title: 'Actualizando usuario...',
+                    text: `¿Está seguro de actualizar los datos ?`,
+                    icon: 'warning',
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((willDelete) => {
+                        if (willDelete) {
+                            swal({
+                                title: 'Excelente !',
+                                text: `${respuesta[1]}`,
+                                icon: 'success',
+                                buttons: true,
+                                dangerMode: true,
+                            })
+                                .then((verdadero) => {
+                                    if (verdadero) {
+                                        $('#exampleModal').modal('hide')
+                                        modalUsuarios.hide();
+                                        document.getElementById('formUsuarios').reset()
+                                        listarUsuarios().then(() => {
+                                            generarTabla()
+                                        })
+                                    } else {
+                                        swal("OK");
+                                
+                                    }
+                                })
+
+                        } else {
+                            swal("Cancelado", {
+                                icon: 'error'
+                            });
+                        }
+                    });
+            } else if (respuesta[0] == 'error') {
+                swal({
+                    title: ':( !',
+                    text: `${respuesta[1]}`,
+                    icon: 'error',
+                    button: 'Ok',
+                });
+            } else if (respuesta[0] == 'warning') {
+                console.warn(respuesta[1])
+            } else {
+                console.warn('respuesta no definida ' + respuesta)
+            }
         } catch {
-
+            console.error(error)
         }
     }
 }
@@ -117,13 +221,11 @@ const validarFormularios = () => {
                     event.preventDefault();
                     if (form.id == 'formUsuarios') {
                         const hey = document.getElementById('tituloModalUsuarios').innerHTML;
-                        console.log(hey)
-                        if(hey == 'Agregar Usuario'){
+                        if (hey == 'Agregar Usuario') {
                             accionesUsuario('agregar', recolectarDatosGUIUsuario())
-                            $('#modal'). modal('hide');
-                        }else if(document.getElementById('tituloModalUsuarios') == 'Actualizar Usuario'){
-
-                        }else{
+                        } else if (hey == 'Actualizar Usuario') {
+                            accionesUsuario('editar', recolectarDatosGUIUsuario())
+                        } else {
                             console.log('que show')
                         }
                     }
@@ -206,6 +308,7 @@ const generarTabla = () => {
 
     tbody.append(...arrayItems)
     table.append(thead, tbody)
+    document.getElementById('Usuarios').innerHTML = ''
     document.getElementById('Usuarios').append(table)
 
     listenersAccionesUsuario()
@@ -220,8 +323,15 @@ const listenersAccionesUsuario = () => {
     for (let i = 0; i < elementosEditar.length; i++) {
         document.getElementById(elementosEditar[i].id).addEventListener('click', function () {
             let idUsuario = this.id.split('-')[1]
+            document.getElementById('tituloModalUsuarios').innerHTML = 'Actualizar Usuario'
             for (const user in usuarios) {
                 if (usuarios[user].id_usuario == idUsuario) {
+                    document.getElementById('txtId').value = usuarios[user].id
+                    document.getElementById('txtIdUsuario').value = usuarios[user].id_usuario
+                    document.getElementById('txtNombreUsuario').value = usuarios[user].nombre_usuario
+                    document.getElementById('txtEmailUsuario').value = usuarios[user].correo
+                    document.getElementById('txtStatusUsuario').value = usuarios[user].status
+                    modalUsuarios.show();
                     break;
                 }
             }
@@ -229,7 +339,36 @@ const listenersAccionesUsuario = () => {
     }
 
     for (let i = 0; i < elementosEliminar.length; i++) {
+        document.getElementById(elementosEliminar[i].id).addEventListener('click', function () {
+            let idUsuario = this.id.split('-')[1],
+                nombreUsuario = ''
+            for (const user in usuarios) {
+                if (usuarios[user].id_usuario == idUsuario) {
+                    nombreUsuario = usuarios[user].nombre_usuario
+                    break
+                }
+            }
+            swal({
+                title: 'Eliminando usuario...',
+                text: `¿Está seguro de eliminar a ${nombreUsuario} ?`,
+                icon: 'warning',
+                buttons: true,
+                dangerMode: true,
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        accionesUsuario('eliminar', idUsuario).then(() => {
+                            swal('Usuario eliminado', {
+                                icon: 'success',
+                            });
+                        })
+                    } else {
+                        swal("Cancelado", {
+                            icon: 'error'
+                        });
+                    }
+                });
 
-
+        })
     }
 }

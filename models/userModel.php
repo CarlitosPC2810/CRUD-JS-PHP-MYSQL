@@ -49,14 +49,52 @@ class userModel
                     )";
 
                 $stmt = Connection::connect()->prepare($addUser);
-                if($stmt->execute()){
+                if ($stmt->execute()) {
                     return ["success", "Usuario registrado !"];
-                }else{
+                } else {
                     return ["error", "Imposible realizar registro !"];
                 }
             }
         } catch (\Exception $e) {
             return ["warning", "Error SQL $e"];
+        }
+    }
+
+    public static function deleteUser($idUsuario)
+    {
+        try {
+            $deleteUser =
+                "DELETE FROM tabla_users WHERE id_usuario = $idUsuario";
+            $stmt = Connection::connect()->prepare($deleteUser);
+            if ($stmt->execute()) {
+                return ["success", "Usuario Eliminado"];
+            } else {
+                return ["error", "Imposible eliminar usuario !"];
+            }
+        } catch (Exception $e) {
+            return ["warning", "Error sql $e"];
+        }
+    }
+
+    public static function updateUser($id, $idUsuario, $nombreUsuario, $correoUsuario, $estatusUsuario)
+    {
+        try {
+            $updateUser =
+                "UPDATE tabla_users 
+                    SET 
+                        id_usuario = '" . $idUsuario . "', 
+                        nombre_usuario = '" . $nombreUsuario . "', 
+                        correo = '" . $correoUsuario . "',
+                        `status` = '" . $estatusUsuario . "'
+                    WHERE id = '" . $id . "'";
+            $stmt = Connection::connect()->prepare($updateUser);
+            if ($stmt->execute()) {
+                return ["success", "Usuario actualizado !"];
+            } else {
+                return ["error", "Imposible actualizar usuario !"];
+            }
+        } catch (Exception $e) {
+            return ["warning", "ERROR SQL $e"];
         }
     }
 }
