@@ -1,1 +1,1 @@
-<link rel="stylesheet" href="../static/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
